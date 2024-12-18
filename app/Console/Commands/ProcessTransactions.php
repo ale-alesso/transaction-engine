@@ -15,7 +15,7 @@ class ProcessTransactions extends Command
     protected $signature = 'transactions:process {file}';
     protected $description = 'Process transactions from a file and calculate commissions.';
 
-    public function handle()
+    public function handle(): int
     {
         $filePath = $this->argument('file');
 
