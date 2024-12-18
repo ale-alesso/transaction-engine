@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Exceptions\InvalidAccessKeyException;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -13,13 +14,6 @@ class ProcessTransactions extends Command
 {
     protected $signature = 'transactions:process {file}';
     protected $description = 'Process transactions from a file and calculate commissions.';
-
-    private const BIN_URL = 'https://lookup.binlist.net/';
-    private const EU_COUNTRIES = [
-        'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR',
-        'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PO', 'PT', 'RO',
-        'SE', 'SI', 'SK'
-    ];
 
     public function handle()
     {
@@ -61,13 +55,6 @@ class ProcessTransactions extends Command
         return ceil($amountInEur * $commissionRate * 100) / 100;
     }
 
-    private function getBinInfo(string $bin): array
-    {
-        $response = Http::get(self::BIN_URL . $bin);
-
-        return $response->json();
-    }
-
     private function getExchangeRate(string $currency): float|array
     {
         if ($currency === 'EUR') {
@@ -97,8 +84,15 @@ class ProcessTransactions extends Command
         }
     }
 
+    private function getBinInfo(string $bin): array
+    {
+        $response = Http::get(Config::get('exchange.api_binlist_url') . $bin);
+
+        return $response->json();
+    }
+
     private function isEu(string $countryCode): bool
     {
-        return in_array($countryCode, self::EU_COUNTRIES, true);
+        return in_array($countryCode, Config::get('eu.countries'), true);
     }
 }
